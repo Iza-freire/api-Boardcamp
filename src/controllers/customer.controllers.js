@@ -11,7 +11,7 @@ export async function createCustomer(req, res) {
 
     res.sendStatus(201);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(400).send(err.message);
   }
 }
 
