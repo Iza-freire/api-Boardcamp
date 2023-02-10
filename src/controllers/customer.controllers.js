@@ -44,18 +44,22 @@ export async function getCustomerById(req, res) {
 
 
 export async function putUpdateCustomer(req, res) {
-  const { id } = req.params;
+ const customerId = req.params.id;
   const { name, phone, cpf, birthday } = req.body;
 
   try {
-    await connectionDB.query(
-      "UPDATE customers SET name = $1, phone = $2, cpf = $3, birthday = $4 WHERE id = $5",
-      [name, phone, cpf, birthday, id]
+    const result = await connectionDB.query(
+      "UPDATE customers SET name=$1, phone=$2, cpf=$3, birthday=$4 WHERE id=$5",
+      [name, phone, cpf, birthday, customerId]
     );
 
+    if (result.rowCount === 0) {
+      return res.status(404).send({ error: "Customer not found." });
+    }
+
     res.sendStatus(200);
-  } catch (err) {
-    res.status(500).send(err.message);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
   }
 }
 
