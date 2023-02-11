@@ -70,11 +70,15 @@ export async function finalizeRentals(req, res) {
     const delayFee = daysDelay > 0 ? pricePerDay * daysDelay : 0;
 
 
-    await connectionDB.query(`
-    UPDATE rentals
-    SET "returnDate" = $1, "delayFee" = $2
-    WHERE id = $3
-`, [returnDateObj, delayFee, id]);
+    await connectionDB.query(
+     `
+        UPDATE rentals
+        SET "returnDate" = NOW(), "delayFee" = $1
+        WHERE id=$3
+     `,
+      [returnDate, delayFee, id]
+    );
+
 
     return res.sendStatus(200);
   } catch (error) {
