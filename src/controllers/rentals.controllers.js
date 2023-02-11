@@ -30,7 +30,6 @@ export async function createRentals(req, res) {
     res.status(500).send(err.message);
   }
 
-
 }
 export async function getRentals(req, res) {
 
