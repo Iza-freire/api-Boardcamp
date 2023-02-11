@@ -46,12 +46,7 @@ export async function getRentals(req, res) {
   }
 }
 
-function calculateDelayFee(daysDelay, originalPrice, daysRented) {
-  if (daysDelay <= 0) {
-    return 0;
-  }
-  return originalPrice * (daysDelay / daysRented) * 0.1;
-}
+
 
 export async function finalizeRentals(req, res) {
 
@@ -60,24 +55,31 @@ export async function finalizeRentals(req, res) {
 
   try {
     const rentalExists = await connectionDB.query('SELECT * FROM rentals WHERE id = $1', [id]);
-    if (rentalExists.rowCount === 0) {
-      return res.sendStatus(400);
+    if (rentalExists.rows.length === 0) {
+      return res.status(404).send('Rental not found');
     }
 
-    const rental = rentalExists.rows[0];
+    const { rentDate, originalPrice, daysRented } = rentalExists.rows[0];
+    const pricePerDay = originalPrice / daysRented;
 
-    if (rental.returnDate) {
-      return res.sendStatus(400);
+    if (rentalExists.rows[0].returnDate) {
+      return res.status(400).send('Rental already returned');
     }
 
-    const daysDelay = Math.ceil((returnDate - rental.rentDate) / (1000 * 60 * 60 * 24));
-    const delayFee = calculateDelayFee(daysDelay, rental.originalPrice, rental.daysRented);
+    const returnDateObj = returnDate ? new Date(returnDate) : new Date();
+    const daysDelay = Math.ceil((returnDateObj - rentDate) / (24 * 3600 * 1000)) - daysRented;
+    const delayFee = daysDelay > 0 ? pricePerDay * daysDelay : 0;
+  
 
     await connectionDB.query(
-      `UPDATE rentals SET "returnDate"=$1, "delayFee"=$2 WHERE id=$3`,
-      [returnDate, delayFee, id]
+      `
+        UPDATE rentals
+        SET "returnDate" = $1, "delayFee" = $2
+        WHERE id = $3
+      `,
+      [returnDateObj, delayFee, id]
     );
-    res.sendStatus(200);
+    return res.sendStatus(200);
   } catch (error) {
     res.status(500).send(error.message);
   }
