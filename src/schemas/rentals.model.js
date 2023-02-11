@@ -9,3 +9,4 @@ export const rentalSchemma = joi.object({
   originalPrice: joi.number().required(),
   delayFee: joi.number().allow(null),
 });
+
