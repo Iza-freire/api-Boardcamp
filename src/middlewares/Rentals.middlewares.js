@@ -31,12 +31,12 @@ export async function validShemaRentals(req, res, next) {
       return res.status(400).send({ errors });
     }
 
-    const customerIdExists = await connectionDB.query(
+    const IdExists = await connectionDB.query(
       "SELECT * FROM customers WHERE id=$1",
       [customerId]
     );
 
-    if (customerIdExists.rowCount === 0) {
+    if (IdExists.rowCount === 0) {
       return res.sendStatus(400);
     }
 
@@ -45,19 +45,18 @@ export async function validShemaRentals(req, res, next) {
 
     const gameData = res.locals.game;
     const rentals = await connectionDB.query(
-      `SELECT * FROM rentals WHERE "gameId"=$1`,
+      `SELECT * FROM rentals WHERE "gameId"=$1 AND "returnDate" IS NULL`,
       [gameData.rows[0].id]
     );
 
-    console.log(rentals.rows.length);
-
-    if (rentals.rows.length > gameData.rows[0].stockTotal) {
+    if (rentals.rowCount >= gameData.rows[0].stockTotal) {
       return res.sendStatus(400);
     }
 
     next();
 
+
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(400).send(err.message);
   }
 }
