@@ -67,7 +67,8 @@ export async function finalizeRentals(req, res) {
 
     const returnDateObj = returnDate ? new Date(returnDate) : new Date();
     const daysDelay = Math.ceil((returnDateObj - rentdate) / (1000 * 60 * 60 * 24)) - daysrented;
-    const delayFee = daysDelay > 0 ? pricePerDay * 100 * daysDelay : 0;
+    const delayFee = daysDelay > 0 ? pricePerDay * daysDelay : 0;
+
 
     await connectionDB.query(`
     UPDATE rentals
