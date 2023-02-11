@@ -48,31 +48,26 @@ export async function getRentals(req, res) {
 
 
 export async function finalizeRentals(req, res) {
-
   const { id } = req.params;
 
-  try {
-    const result = await connectionDB.query("SELECT * FROM rentals WHERE id=$1", [id]);
-    const rental = result.rows[0];
+  const result = await connectionDB.query("SELECT * FROM rentals WHERE id=$1", [id]);
+  const rental = result.rows[0];
 
-    if (!rental) return res.sendStatus(404);
-    if (rental.returnDate) return res.sendStatus(400);
+  if (!rental) return res.sendStatus(404);
+  if (rental.returnDate) return res.sendStatus(400);
 
-    const diffInDays = (new Date().getTime() - new Date(rental.rentDate).getTime()) / (24 * 3600 * 1000);
-    const delayFee = diffInDays > rental.daysRented ? (diffInDays - rental.daysRented) * rental.originalPrice : 0;
+  const diffInDays = (new Date().getTime() - new Date(rental.rentDate).getTime()) / (24 * 3600 * 1000);
+  const delayFee = diffInDays > rental.daysRented ? (diffInDays - rental.daysRented) * rental.originalPrice : 0;
 
-    await connectionDB.query(`
-      UPDATE rentals
-      SET "returnDate" = NOW(), "delayFee" = $1
-      WHERE id=$2
-    `, [delayFee, id]);
+  await connectionDB.query(`
+    UPDATE rentals
+    SET "returnDate" = NOW(), "delayFee" = $1
+    WHERE id=$2
+  `, [delayFee, id]);
 
-    res.sendStatus(200);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-
+  res.sendStatus(200);
 }
+
 export async function deleteRentals(req, res) {
 
   const { id } = req.params;
