@@ -48,26 +48,40 @@ export async function getRentals(req, res) {
 
 
 export async function finalizeRentals(req, res) {
+
   const { id } = req.params;
+  const { returnDate } = req.body;
 
-  const result = await connectionDB.query("SELECT * FROM rentals WHERE id=$1", [id]);
-  const rental = result.rows[0];
+  try {
+    const rentalExists = await connectionDB.query('SELECT * FROM rentals WHERE id = $1', [id]);
+    if (rentalExists.rows.length === 0) {
+      return res.status(404).send('Rental not found');
+    }
 
-  if (!rental) return res.sendStatus(404);
-  if (rental.returnDate) return res.sendStatus(400);
+    const { rentDate, originalPrice, daysRented } = rentalExists.rows[0];
+    const pricePerDay = originalPrice / daysRented;
 
-  const diffInDays = (new Date().getTime() - new Date(rental.rentDate).getTime()) / (24 * 3600 * 1000);
-  const delayFee = diffInDays > rental.daysRented ? (diffInDays - rental.daysRented) * rental.originalPrice : 0;
+    if (rentalExists.rows[0].returnDate) {
+      return res.status(400).send('Rental already returned');
+    }
 
-  await connectionDB.query(`
-    UPDATE rentals
-    SET "returnDate" = NOW(), "delayFee" = $1
-    WHERE id=$2
-  `, [delayFee, id]);
+    const returnDateObj = returnDate ? new Date(returnDate) : new Date();
+    const daysDelay = Math.ceil((returnDateObj - rentDate) / (1000 * 60 * 60 * 24)) - daysRented;
+    const delayFee = daysDelay > 0 ? pricePerDay * daysDelay : 0;
 
-  res.sendStatus(200);
+    await connectionDB.query(
+      `
+        UPDATE rentals
+        SET "returnDate" = $1, "delayFee" = $2
+        WHERE id = $3
+      `,
+      [returnDateObj, delayFee, id]
+    );
+    return res.sendStatus(200);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 }
-
 export async function deleteRentals(req, res) {
 
   const { id } = req.params;
