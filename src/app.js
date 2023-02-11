@@ -5,6 +5,7 @@ dotenv.config();
 
 import gamesRouter from './routers/game.routes.js';
 import customersRouter from './routers/customer.routes.js';
+import rentalRouter from './routers/rentals.routes.js';
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(cors());
 
 app.use(gamesRouter);
 app.use(customersRouter);
+app.use(rentalRouter);
 
 const port = process.env.PORT || 5000
 
