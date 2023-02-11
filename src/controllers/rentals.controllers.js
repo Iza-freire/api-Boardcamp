@@ -71,12 +71,12 @@ export async function finalizeRentals(req, res) {
 
 
     await connectionDB.query(
-     `
-        UPDATE rentals
-        SET "returnDate" = NOW(), "delayFee" = $1
-        WHERE id=$3
-     `,
-      [returnDate, delayFee, id]
+      `
+      UPDATE rentals
+      SET "returnDate" = $1, "delayFee" = $2
+      WHERE id = $3
+      `,
+      [returnDateObj, delayFee, id]
     );
 
 
