@@ -65,11 +65,9 @@ export async function finalizeRentals(req, res) {
     if (rentalExists.rows[0].returnDate) {
       return res.status(400).send('Rental already returned');
     }
-
     const returnDateObj = returnDate ? new Date(returnDate) : new Date();
     const daysDelay = Math.ceil((returnDateObj - rentDate) / (24 * 3600 * 1000)) - daysRented;
-    const delayFee = daysDelay > 0 ? Math.ceil(pricePerDay * daysDelay)/8 : 0;
-  
+    const delayFee = daysDelay > 0 ? Math.ceil(pricePerDay * daysDelay) : 0;
 
     await connectionDB.query(
       `
