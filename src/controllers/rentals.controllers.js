@@ -46,8 +46,6 @@ export async function getRentals(req, res) {
   }
 }
 
-
-
 export async function finalizeRentals(req, res) {
   const { id } = req.params;
 
@@ -61,11 +59,11 @@ export async function finalizeRentals(req, res) {
 
     const returnTimeObj = new Date().getTime() - new Date(rental.rentDate).getTime();
     const returnDateObj = Math.floor(returnTimeObj / (24 * 3600 * 1000));
-
     let delayFee = 0;
+    
     if (returnDateObj > rental.daysRented) {
       const daysDelay = returnDateObj - rental.daysRented;
-      delayFee = daysDelay * rental.originalPrice;
+      delayFee = daysDelay * rental.originalPrice / rental.daysRented;
     }
 
     await connectionDB.query(
@@ -82,6 +80,7 @@ export async function finalizeRentals(req, res) {
     res.status(500).send(err.message);
   }
 }
+
 export async function deleteRentals(req, res) {
 
   const { id } = req.params;
